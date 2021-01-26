@@ -20,11 +20,11 @@ func main()  {
 		panic(err)
 	}
 
-	val, err := rdb.Get(ctx, "key").Result()
+	val, err := rdb.Get(ctx, "name").Result()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("key", val)
+	fmt.Println("name", val)
 
 	val2, err := rdb.Get(ctx, "missing_key").Result()
 	if err == redis.Nil {

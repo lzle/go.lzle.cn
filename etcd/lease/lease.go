@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"go.etcd.io/etcd/clientv3"
 	"time"
 )
@@ -16,12 +15,15 @@ func main() {
 		// handle error!
 	}
 	defer cli.Close()
-	// set
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	resp, err := cli.Delete(ctx, "sample_key", )
-	cancel()
+	// 创建一个5秒的租约
+	resp, err := cli.Grant(context.TODO(), 5)
 	if err != nil {
 		// handle error!
 	}
-	fmt.Println(resp)
+	// 5秒钟之后, /nazha/ 这个key就会被移除
+	_, err = cli.Put(context.TODO(), "sample_key", "lease", clientv3.WithLease(resp.ID))
+	if err != nil {
+		// handle error!
+	}
+
 }

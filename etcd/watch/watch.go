@@ -16,12 +16,11 @@ func main() {
 		// handle error!
 	}
 	defer cli.Close()
-	// set
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	resp, err := cli.Delete(ctx, "sample_key", )
-	cancel()
-	if err != nil {
-		// handle error!
+	// watch
+	rch := cli.Watch(context.Background(), "my-prefix/sample_key") // <-chan WatchResponse
+	for wresp := range rch {
+		for _, ev := range wresp.Events {
+			fmt.Printf("Type: %s Key:%s Value:%s\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
+		}
 	}
-	fmt.Println(resp)
 }

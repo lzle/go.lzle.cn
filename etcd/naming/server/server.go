@@ -4,40 +4,45 @@ import (
 	"context"
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
-	etcdnaming "go.etcd.io/etcd/clientv3/naming"
+	etcdnaming "github.com/coreos/etcd/clientv3/naming"
+	"go.lzle.cn/etcd/naming/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/naming"
 	"google.golang.org/grpc/reflection"
-	pb "go.lzle.cn/etcd/pb"
 	"net"
 	"time"
 )
 
+// First, register new endpoint addresses for a service:
+func etcdAdd(c *clientv3.Client, service, addr string) error {
+	r := &etcdnaming.GRPCResolver{Client: c}
+	return r.Update(c.Ctx(), service, naming.Update{Op: naming.Add, Addr: addr})
+}
+
 type server struct{}
 
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	fmt.Println("request 8002")
-	return &pb.HelloReply{Message: "Hello " + in.Name}, nil
+	fmt.Println("request 9000")
+	return &pb.HelloReply{Message: "Hello 9000" + in.Name}, nil
 }
 
 
-func main() {
-	cli,err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{"192.168.188.105:2379","192.168.188.110:2379","192.168.188.37:2379"},
+func main()  {
+	cli, err := clientv3.New(clientv3.Config{
+		Endpoints:   []string{"192.168.188.105:2379", "192.168.188.105:22379", "192.168.188.105:32379"},
 		DialTimeout: 5 * time.Second,
 	})
 	if err != nil {
-		fmt.Println("connect etcd err:", err)
-		return
+		fmt.Println(err)
 	}
 
-	// 创建命名解析
-	r := etcdnaming.GRPCResolver{Client: cli}
+	err = etcdAdd(cli,"my-server","127.0.0.1:9000")
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	// 将本服务注册添加etcd中，服务名称为myService，服务地址为本机8001端口
-	r.Update(context.TODO(),"myService",naming.Update{naming.Add,":8002",""})
-
-	lis, err := net.Listen("tcp", ":8002")
+	// 监听本地的8972端口
+	lis, err := net.Listen("tcp", "127.0.0.1:9000")
 	if err != nil {
 		fmt.Printf("failed to listen: %v", err)
 		return
